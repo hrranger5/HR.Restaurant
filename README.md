@@ -13,4 +13,4 @@ This project is an AI-based chatbot developed using Google Dialogflow and Flask 
 ## ⚙️ Installation
 1. Clone this repository:
    ```bash
-   git clone https://github.com/YourUsername/YourRepository.git
+   git clone https://github.com/hrranger5/HR.Restaurant.git
