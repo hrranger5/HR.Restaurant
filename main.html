@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" type="text/css" href="styles.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HR.Restaurant</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <script src="script.js" defer></script>
+    <script src="https://www.gstatic.com/dialogflow-console/fast/messenger/bootstrap.js?v=1"></script>
+</head>
+<body>
+    <div class="container">
+        <nav>
+            <span class="brand" style="color: white; font-weight: bold;">HR.Restaurant</span>
+            <a href="#home">HOME</a> |
+            <a href="#menu">MENU</a> |
+            <a href="#aboutus">ABOUT US</a> |
+            <a href="#contactus">CONTACT US</a> |
+            <a href="login.html">SIGN IN</a> |
+            <a href="signup.html">SIGN UP</a>
+        </nav>
+
+        <section id="home">
+            <img src="pictures/banner.jpg" alt="Restaurant Banner">
+        </section>
+
+        <section id="menu">
+            <h2>Our Menu</h2>
+            <div class="grid-container">
+                <img src="pictures/biryani.jpg" alt="Menu item 1">
+                <img src="pictures/keema.jpg" alt="Menu item 2">
+                <img src="pictures/burger.jpg" alt="Menu item 3">
+                <img src="pictures/pizzza.jpg" alt="Menu item 4">
+                <img src="pictures/coffe.jpg" alt="Menu item 5">
+                <img src="pictures/icecream.jpg" alt="Menu item 6">
+            </div>
+        </section>
+
+        <section class="reservation">
+            <h2>Make a Reservation</h2>
+            <form id="reservation-form">
+                <input type="text" id="name" placeholder="Your Name" required>
+                <input type="date" id="date" required>
+                <input type="time" required>
+                <button type="submit">Book Now</button>
+            </form>
+        </section>
+
+        <!-- About Us Section -->
+        <section id="aboutus">
+            <h2>About Us</h2>
+            <p>Welcome to HR.Restaurant, where we offer the best dining experience with delicious meals and great service.</p>
+        </section>
+
+        <!-- Contact Us Section (Merged with Location) -->
+        <section id="contactus">
+            <h2>Contact Us</h2>
+            <p><strong>Address:</strong> 123 Food Street, Lahore, Pakistan</p>
+            <p><strong>Email:</strong> <a href="mailto:hrranger555@gmail.com">hrranger555@gmail.com</a></p>
+            <p><strong>Phone:</strong> +92 328 4017137</p>
+        </section>
+
+        <!-- Chatbot Toggle Button -->
+        <button id="chatbot-toggle">Chat with Us</button>
+        <section id="chatbot" class="hidden">
+            <df-messenger intent="WELCOME" chat-title="RestaurantChatbot" agent-id="81d8f6b5-a73a-436a-ab5b-7764f2539c28" language-code="en"></df-messenger>
+        </section>
+    </div>
+    <script>
+        document.getElementById('chatbot-toggle').addEventListener('click', function() {
+            var chatbot = document.getElementById('chatbot');
+            chatbot.classList.toggle('hidden');
+        });
+    </script>
+</body>
+</html>
