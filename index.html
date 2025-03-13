@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HR Restaurant</title>
+    <link rel="stylesheet" href="styles.css">
+    <script defer src="script.js"></script>
+</head>
+<body>
+    <header>
+        <div class="banner">
+            <img src="frontend/pictures/banner.jpg" alt="HR Restaurant Banner">
+            <h1>Welcome To <span>HR.restaurant</span></h1>
+            <p class="special-menu">Special Menu</p>
+        </div>
+        <nav>
+            <ul>
+                <li><a href="#menu">Menu</a></li>
+                <li><a href="#reservation">Reservation</a></li>
+                <li><a href="#about">About</a></li>
+                <li><a href="#contact">Contact</a></li>
+                <li><a href="signin.html">Sign In</a></li>
+                <li><a href="signup.html">Sign Up</a></li>
+            </ul>
+        </nav>
+    </header>
+    
+    <section id="menu" class="menu-section">
+        <h2>Our Special Menu</h2>
+        <div class="menu-items">
+            <!-- JavaScript dynamically adds menu items here -->
+        </div>
+    </section>
+    
+    <section id="reservation" class="reservation-section">
+        <h2>Book a Table</h2>
+        <form id="reservation-form">
+            <input type="text" id="name" placeholder="Your Name" required>
+            <input type="email" id="email" placeholder="Your Email" required>
+            <input type="datetime-local" id="date" required>
+            <button type="submit">Reserve Now</button>
+        </form>
+    </section>
+    
+    <section id="about" class="about-section">
+        <h2>About Us</h2>
+        <p>Welcome to HR Restaurant, where we serve the best food made with fresh ingredients and love. Experience a delightful atmosphere with top-quality service.</p>
+    </section>
+    
+    <section id="contact" class="contact-section">
+        <h2>Contact Us</h2>
+        <p>Email: hrranger555@gmail.com</p>
+        <p>Phone: +92 384017137</p>
+    </section>
+    
+    <section id="dashboard" class="dashboard-section">
+        <h2>User Dashboard</h2>
+        <p>Welcome, [User Name]!</p>
+        <p>Your recent orders and profile details will appear here.</p>
+    </section>
+    
+    <footer>
+        <p>&copy; 2025 HR Restaurant. All Rights Reserved.</p>
+    </footer>
+</body>
+</html>
