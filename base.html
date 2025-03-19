@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HR.Restaurant</title>
+</head>
+{% if session['user_role'] %}
+    <li class="nav-item"><a class="nav-link" href="{{ url_for('dashboard') }}">Dashboard</a></li>
+    <li class="nav-item"><a class="nav-link" href="{{ url_for('profile') }}">Profile</a></li>
+{% endif %}
+
+{% if session['user_role'] == 'admin' %}
+    <li class="nav-item"><a class="nav-link" href="{{ url_for('admin_dashboard') }}">Admin Panel</a></li>
+{% endif %}
+
+{% if session['has_order'] %}
+    <li class="nav-item"><a class="nav-link" href="{{ url_for('order_tracking') }}">Order Tracking</a></li>
+{% endif %}
+{% if not session['user_role'] %}
+    <li class="nav-item"><a class="nav-link" href="{{ url_for('signup') }}">Sign Up</a></li>
+{% endif %}
+{% if session['user_role'] %}
+    <li class="nav-item"><a class="nav-link" href="{{ url_for('logout') }}">Logout</a></li>
+{% endif %}
+{% if not session['user_role'] %}
+    <li class="nav-item"><a class="nav-link" href="{{ url_for('login') }}">Login</a></li>
+{% endif %}
+    <nav class="navbar navbar-dark">
+        <span class="brand">HR.Restaurant</span>
+        <a href="{{ url_for('home') }}">HOME</a>
+        <a href="{{ url_for('menu') }}">MENU</a>
+        <a href="{{ url_for('about') }}">ABOUT US</a>
+        <a href="{{ url_for('contact') }}">CONTACT US</a>
+        <a href="{{ url_for('signup') }}">SIGN UP</a>
+        <a href="{{ url_for('login') }}">LOGIN</a>
+        <a href="{{ url_for('dashboard') }}">DASHBOARD</a>
+    </nav>
+
+    {% block content %}{% endblock %}
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
