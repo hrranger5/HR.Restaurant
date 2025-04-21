@@ -54,7 +54,7 @@ def signup():
 
         cursor.execute("SELECT email FROM users WHERE email=%s", (email,))
         if cursor.fetchone():
-            flash("Email already registered", "warning")  # ✅ Use flash here
+            flash("Email already registered", "warning")
             return redirect(url_for('signup'))
 
         hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
