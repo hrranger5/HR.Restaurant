@@ -4,6 +4,7 @@ import random
 from flask import session
 from flask_bcrypt import Bcrypt
 import os
+from flask import flash
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from werkzeug.security import generate_password_hash
@@ -38,9 +39,7 @@ cursor = db.cursor()
 def home():
     return render_template('index.html')
 
-# User Signup
-from flask import flash  # Make sure this is imported
-
+# User Signup 
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
     if request.method == 'POST':
