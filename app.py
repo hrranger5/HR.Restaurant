@@ -12,7 +12,9 @@ from flask_jwt_extended import JWTManager, create_access_token, jwt_required, ge
 from db import get_db_connection
 import mysql.connector
 
+
 app = Flask(__name__)
+
 CORS(app)
 bcrypt = Bcrypt(app)
 app.config['JWT_SECRET_KEY'] = 'baaa4647a590a6692560920062fa190dc9b402ac7d17989b0bc59f09eec45128'
@@ -36,241 +38,159 @@ cursor = db.cursor()
 def home():
     return render_template('index.html')
 
-
 # User Signup
+from flask import flash  # Make sure this is imported
+
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
     if request.method == 'POST':
         username = request.form.get("username")
         email = request.form.get("email")
         password = request.form.get("password")
-        role = request.form.get("role", "customer")  # Default role is 'customer'
+        role = request.form.get("role", "customer")
 
         if not username or not email or not password:
-            return jsonify({"error": "All fields are required"}), 400
+            flash("All fields are required", "danger")
+            return redirect(url_for('signup'))
 
-        # Check if email already exists
         cursor.execute("SELECT email FROM users WHERE email=%s", (email,))
         if cursor.fetchone():
-            return jsonify({"error": "Email already registered"}), 409
+            flash("Email already registered", "warning")  # ✅ Use flash here
+            return redirect(url_for('signup'))
 
-        # Hash the password before storing
         hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
-
-        # Insert user into the database
         cursor.execute("INSERT INTO users (username, email, password_hash, role) VALUES (%s, %s, %s, %s)",
                        (username, email, hashed_password, role))
         db.commit()
+        flash("Signup successful! Please log in.", "success")
+        return redirect(url_for('login'))
 
-        return jsonify({"message": "User registered successfully!"}), 201
-
-    return render_template('signup.html')  # Show signup form for GET requests
+    return render_template('signup.html')
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'GET':
-        return render_template('login.html')  # Serve login page
+        return render_template('login.html')
 
-    data = request.get_json() if request.is_json else request.form
-    email, password = data.get("email"), data.get("password")
+    try:
+        data = request.get_json() if request.is_json else request.form
+        email = data.get("email")
+        password = data.get("password")
 
-    if not email or not password:
-        return jsonify({"error": "Missing email or password"}), 400
+        print("Received:", email, password)  # Debugging
 
-    # Fetch user from database
-    cursor.execute("SELECT user_id, username, password_hash FROM users WHERE email=%s", (email,))
-    user = cursor.fetchone()
+        cursor = mysql.connection.cursor()
+        cursor.execute("SELECT user_id, username, password_hash FROM users WHERE email=%s", (email,))
+        user = cursor.fetchone()
+        print("User from DB:", user)  # Debugging
 
-    if not user or not bcrypt.check_password_hash(user[2], password):
-        return jsonify({"error": "Invalid credentials"}), 401
+        if not user or not bcrypt.check_password_hash(user[2], password):
+            return jsonify({"error": "Invalid credentials"}), 401
 
-    # ✅ Generate JWT Token
-    access_token = create_access_token(identity={"user_id": user[0], "username": user[1]})
+        session['user_id'] = user[0]
+        session['role'] = 'customer'
 
-    return jsonify({"message": "Login successful", "access_token": access_token, "redirect": "/dashboard"}), 200
+        access_token = create_access_token(identity={"user_id": user[0], "username": user[1]})
 
-@app.route('/dashboard', methods=['GET'])
-@jwt_required()  # ✅ Requires JWT token
+        return jsonify({"message": "Login successful", "access_token": access_token}), 200
+    
+    except Exception as e:
+        print("Login Error:", e)
+        # More specific error message for debugging purposes
+        return jsonify({"error": f"Server error: {str(e)}"}), 500
+
+
+# Dashboard Route (Only accessible if logged in)
+@app.route('/dashboard')
 def dashboard():
     try:
-        current_user = get_jwt_identity()  # ✅ Get user info from JWT token
+        user_id = session['user']
+        
+        # Database connection setup
+        conn = mysql.connector.connect(
+            host="localhost",
+            user="root",
+            password="",
+            database="restaurant_chatbot"  
+        )
+        cursor = conn.cursor()
 
-        conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        # Fetch user info from database
+        cursor.execute("SELECT * FROM users WHERE user_id = %s", (user_id,))
+        user = cursor.fetchone()
 
-        # ✅ Fetch user's orders
-        cursor.execute("SELECT id, status FROM orders WHERE user_id = %s", (current_user["user_id"],))
+        # Fetch orders
+        cursor.execute("SELECT * FROM orders WHERE user_id = %s", (user_id,))
         orders = cursor.fetchall()
 
-        # ✅ Fetch user's reservations
-        cursor.execute("SELECT id, date FROM reservations WHERE user_id = %s", (current_user["user_id"],))
+        # Fetch reservations
+        cursor.execute("SELECT * FROM reservations WHERE user_id = %s", (user_id,))
         reservations = cursor.fetchall()
 
-        conn.close()
+        # If admin, get all users and all orders
+        all_users = all_orders = None
+        if session.get('role') == 'admin':
+            cursor.execute("SELECT * FROM users")
+            all_users = cursor.fetchall()
 
-        return jsonify({
-            "message": f"Welcome, {current_user['username']}!",
-            "orders": orders,
-            "reservations": reservations
-        }), 200
+            cursor.execute("SELECT * FROM orders")
+            all_orders = cursor.fetchall()
+
+        return render_template("dashboard.html",
+                               user=user,
+                               orders=orders,
+                               reservations=reservations,
+                               all_users=all_users,
+                               all_orders=all_orders)
 
     except Exception as e:
-        print(f"DEBUG: Dashboard Error - {str(e)}")
-        return jsonify({"error": "Something went wrong. Please try again later."}), 500
+        print("Error in /dashboard route:", e)
+        return "Internal Server Error", 500
 
-@app.route('/customer_dashboard')
-def customer_dashboard():
-    return render_template('dashboard.html')
+    finally:
+        try:
+            cursor.close()
+            conn.close()
+        except:
+            pass
 
-#  Forgot Password Route
-
-@app.route('/forgot_password', methods=['GET', 'POST'])
-def forgot_password():
-    if request.method == 'GET':
-        return render_template('forgot_password.html')  # Serve the HTML form
-
-    data = request.get_json() if request.is_json else request.form
-    email = data.get("email")
-
-    if not email:
-        return jsonify({"error": "Email is required!"}), 400
-
-    otp = str(random.randint(100000, 999999))  # Generate OTP
-    session['reset_otp'] = otp
-    session['reset_email'] = email  # Store email in session for later verification
-
-    if send_email(email, otp):
-        return jsonify({"message": "OTP sent successfully!"}), 200
-    else:
-        return jsonify({"error": "Failed to send OTP!"}), 500
-
-
-# Verify OTP
-@app.route("/verify_otp", methods=["POST"])
-def verify_otp():
-    data = request.json
-    entered_otp = data.get("otp")
-
-    if entered_otp == str(session.get("reset_otp")):
-        session['otp_verified'] = True
-        return jsonify({"message": "OTP verified!", "redirect": "/reset_password"}), 200
-    else:
-        return jsonify({"error": "Invalid OTP."}), 400
-
-    
-
-@app.route('/reset_password', methods=['GET'])
-def reset_password():
-    if 'otp_verified' not in session or not session['otp_verified']:
-        return redirect(url_for('login'))  # Redirect to login if OTP is not verified
-
-    return render_template('reset_password.html')  # Serve reset password form
-
-
-import smtplib
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
-
-def send_email(to_email, otp):
-    sender_email = "hrranger555@gmail.com"
-    sender_password = "zhtl xmxg rqyb tuvg"  # Use your new App Password
-
-    subject = "Your OTP for Password Reset"
-    body = f"Your OTP for password reset is: {otp}\n\nIf you did not request this, please ignore."
-
-    msg = MIMEMultipart()
-    msg["From"] = sender_email
-    msg["To"] = to_email
-    msg["Subject"] = subject
-    msg.attach(MIMEText(body, "plain"))
-
-    try:
-        # Create SMTP session for sending the email
-        server = smtplib.SMTP("smtp.gmail.com", 587)
-        server.set_debuglevel(1)  # Enable debugging
-        server.starttls()  # Secure the connection
-        server.login(sender_email, sender_password)  # Login using App Password
-        server.sendmail(sender_email, to_email, msg.as_string())  # Send email
-        server.quit()
-
-        print(f"✅ OTP sent successfully to {to_email}")
-        return True
-    except smtplib.SMTPAuthenticationError:
-        print("❌ Authentication Error: Check your App Password or enable Less Secure Apps.")
-        return False
-    except smtplib.SMTPException as e:
-        print(f"❌ SMTP Error: {str(e)}")
-        return False
-
-# Reset Password Using OTP (Step 1: Verify OTP)
-@app.route('/reset_password_step1', methods=['POST'])
-def reset_password_step1():
-    if 'otp_verified' not in session or not session['otp_verified']:
-        return jsonify({"error": "Unauthorized request"}), 401
-
-    data = request.json
-    entered_otp = data.get("otp")  # OTP from user
-
-    if entered_otp != str(session.get('reset_otp')):
-        return jsonify({"error": "Invalid OTP"}), 400
-
-    session['otp_verified'] = True  # Mark OTP as verified
-    return jsonify({"message": "OTP verified successfully!"}), 200
-
-# Reset Password (Step 2: Set New Password)
-@app.route('/reset_password_step2', methods=['POST'])
-def reset_password_step2():
-    if 'otp_verified' not in session or not session['otp_verified']:
-        return jsonify({"error": "Unauthorized request"}), 401
-
-    data = request.json
-    new_password = data.get("new_password")
-
-    if not new_password:
-        return jsonify({"error": "Password is required"}), 400
-
-    hashed_password = bcrypt.generate_password_hash(new_password).decode('utf-8')
-    
-    cursor.execute("UPDATE users SET password_hash=%s WHERE email=%s", 
-                   (hashed_password, session['reset_email']))
-    db.commit()
-
-    session.clear()  # ✅ Clear session after password reset
-    return jsonify({"message": "Password reset successfully!", "redirect": "/login"}), 200
-
-
-#  Profile Update
-@app.route('/update_profile', methods=['PUT'])
-@jwt_required()
+# Update Profile Route
+@app.route('/update_profile', methods=['POST'])
 def update_profile():
-    current_user = get_jwt_identity()
-    data = request.json
+    user = User.query.get(session['user_id'])
+    user.fullname = request.form['fullname']
+    user.email = request.form['email']
+    user.phone = request.form['phone']
+    db.session.commit()
 
-    new_name = data.get("username")
-    new_email = data.get("email")
+    return redirect(url_for('dashboard'))
 
-    cursor.execute("UPDATE users SET username=%s, email=%s WHERE user_id=%s", 
-                   (new_name, new_email, current_user["user_id"]))
-    db.commit()
+# Update Password Route
+@app.route('/update_password', methods=['POST'])
+def update_password():
+    user = User.query.get(session['user_id'])
+    old_password = request.form['old_password']
+    new_password = request.form['new_password']
+    confirm_password = request.form['confirm_password']
 
-    return jsonify({"message": "Profile updated successfully!"})
+    if old_password != user.password:
+        return 'Old password is incorrect'
 
-@app.route('/add_menu_item', methods=['POST'])
-def add_menu_item():
-    data = request.json
-    name = data.get('name')
-    price = data.get('price')
-    image_url = data.get('image_url')
+    if new_password != confirm_password:
+        return 'New passwords do not match'
 
-    if not name or not price or not image_url:
-        return jsonify({"error": "Missing required fields"}), 400
+    user.password = new_password
+    db.session.commit()
 
-    sql = "INSERT INTO menu_items (name, price, image_url) VALUES (%s, %s, %s)"
-    values = (name, price, image_url)
-    cursor.execute(sql, values)
-    db.commit()
+    return redirect(url_for('dashboard'))
 
-    return jsonify({"message": "Menu item added successfully"}), 201
+# Logout Route
+@app.route('/logout')
+
+def logout():
+    session.pop('user_id', None)
+    session.pop('role', None)  # Clear the session role
+    return redirect(url_for('login'))  # Redirect to login page
 
 # Get Menu
 
@@ -365,4 +285,4 @@ def submit_feedback():
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True) 
