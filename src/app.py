@@ -17,8 +17,13 @@ from werkzeug.security import check_password_hash
 from random import randint
 from functools import wraps
 import datetime 
+import logging
+import uuid
+from dateutil.parser import parse as parse_datetime
 
 app = Flask(__name__)
+
+logging.basicConfig(level=logging.DEBUG)
 
 CORS(app)
 bcrypt = Bcrypt(app)
@@ -360,13 +365,6 @@ def user_dashboard():
         })
 
     return render_template('user_dashboard.html', username=username, orders=orders, reservations=reservations, cart_items=cart_items, cart_total=cart_total)
-@app.route('/process_payment', methods=['POST'])
-def process_payment():
-    # Process payment logic goes here
-    card_number = request.form['card_number']
-    # Further processing such as payment gateway integration
-
-    return redirect(url_for('user_dashboard'))  # Redirect to the dashboard or any other page after processing
 
 # Helper function to get status color for badges
 def get_status_color(status):
@@ -615,57 +613,7 @@ def place_order():
         else:
             flash(f"Error placing order: {str(e)}", "danger")
             return redirect(url_for('order'))
-            
-@app.route('/make_reservation', methods=['POST'])
-def make_reservation():
-    if 'user_id' not in session:
-        if request.is_json:
-            return jsonify({"error": "Authentication required"}), 401
-        else:
-            flash("Please login to make a reservation", "warning")
-            return redirect(url_for('login'))
-    
-    user_id = session['user_id']
-    
-    try:
-        # Getting data from the request
-        data = request.get_json() if request.is_json else request.form
-        guest_count = data.get('guest_count')
-        reservation_time = data.get('reservation_time')
 
-        # Validate inputs
-        if not guest_count or not reservation_time:
-            if request.is_json:
-                return jsonify({"error": "Missing required fields"}), 400
-            else:
-                flash("All fields are required", "danger")
-                return redirect(url_for('reservations'))
-
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        
-        # Insert reservation into the database
-        cursor.execute("""
-            INSERT INTO reservations (user_id, guest_count, reservation_time, status) 
-            VALUES (%s, %s, %s, %s)
-        """, (user_id, guest_count, reservation_time, 'pending'))
-        
-        conn.commit()
-        cursor.close()
-        conn.close()
-
-        if request.is_json:
-            return jsonify({"message": "Reservation made successfully"}), 200
-        else:
-            flash("Reservation made successfully", "success")
-            return redirect(url_for('reservations'))
-            
-    except Exception as e:
-        if request.is_json:
-            return jsonify({"error": str(e)}), 500
-        else:
-            flash(f"Error making reservation: {str(e)}", "danger")
-            return redirect(url_for('reservations'))
 
 # Feedback routes
 @app.route('/feedback', methods=['GET', 'POST'])
@@ -777,81 +725,259 @@ def api_submit_feedback():
         return jsonify({"message": "Feedback submitted successfully!"})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
 @app.route('/webhook', methods=['POST'])
 def webhook():
     req = request.get_json(force=True)
-    intent = req.get('queryResult').get('intent').get('displayName')
-    parameters = req.get('queryResult').get('parameters')
-    
-    response_text = "Sorry, I couldn't process your request."
+    intent = req['queryResult']['intent']['displayName']
 
-    if intent == 'order_tracking':
-        response_text = "Your order is on the way and will arrive in 20 minutes."
-
-    elif intent == 'Cancel_Reservation':
-        response_text = "Your reservation has been successfully canceled."
-
+    if intent == 'Make Reservation':
+        return make_reservation(req)
+    elif intent == 'Modify Reservation':
+        return modify_reservation(req)
+    elif intent == 'Order Tracking':  # Updated intent name
+        return order_tracking(req)
     elif intent == 'AddToCart':
-        food_item = parameters.get('food_item')
-        quantity = parameters.get('number', 1)
-        user_id = parameters.get('user_id', 1)
+        return add_to_cart(req)
+    elif intent == 'View Cart':
+        return view_cart(req)
+    elif intent == 'Place-Order':
+        return place_order(req)
+    elif intent == 'Modify Order':
+        return modify_order(req)
+    elif intent == 'Feedback':
+        return submit_feedback(req)
+    else:
+        return jsonify({'fulfillmentText': "Sorry, I couldn't understand your request."})
 
+def place_order(req):
+    params = req.get("queryResult", {}).get("parameters", {})
+    food_item = params.get("food_item")
+    quantity = params.get("number", 1)
+    user_id = params.get("user_id", 1)
+
+    if not food_item:
+        return jsonify({"fulfillmentText": "Please tell me what you'd like to order."})
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        # 1. Create order
+        cursor.execute("INSERT INTO orders (user_id) VALUES (%s)", (user_id,))
+        order_id = cursor.lastrowid
+
+        # 2. Insert item
+        cursor.execute(""" 
+            INSERT INTO order_items (order_id, food_item, quantity) 
+            VALUES (%s, %s, %s)
+        """, (order_id, food_item, quantity))
+
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+        return jsonify({
+            "fulfillmentText": f"Order placed successfully! {quantity} x {food_item} added to Order #{order_id}."
+        })
+
+    except Exception as e:
+        print("Order placement error:", e)
+        return jsonify({"fulfillmentText": "Something went wrong while placing your order. Please try again."})
+
+def make_reservation(req):
+    from datetime import datetime
+    import logging
+
+    params = req.get("queryResult", {}).get("parameters", {})
+
+    try:
+        # 🔧 FIX: extract 'name' from nested dictionary
+        name = params.get("person", {}).get("name", "Guest")
+        phone = params.get("phone", "N/A")
+        num_guests = params.get("num_guests", 1)
+
+        date_str = params.get("date", "")
+        time_str = params.get("time", "")
+
+        # 🧠 Convert strings to datetime objects
+        date_obj = parse_datetime(date_str)
+        time_obj = parse_datetime(time_str)
+
+        reservation_datetime = date_obj.replace(
+            hour=time_obj.hour, minute=time_obj.minute
+        )
+
+        formatted_date = reservation_datetime.strftime("%Y-%m-%d")
+        formatted_time = reservation_datetime.strftime("%I:%M %p")
+
+        # ✅ Insert reservation into MySQL
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        cursor.execute(
+            "INSERT INTO reservations (person, phone, guests, date_time) VALUES (%s, %s, %s, %s)",
+            (name, phone, num_guests, reservation_datetime)
+        )
+
+        conn.commit()
+
+        response_text = (
+            f"Thanks {name}, your table for {num_guests} guests is booked on "
+            f"{formatted_date} at {formatted_time}. We'll contact you at {phone}."
+        )
+
+    except Exception as e:
+        import traceback
+        logging.error(f"Reservation error: {e}")
+        logging.error(traceback.format_exc())
+        response_text = "Something went wrong while saving your reservation."
+
+    finally:
         try:
-            conn = mysql.connector.connect(
-                host="localhost",
-                user="root",
-                password="",
-                database="restaurant_chatbot"
+            cursor.close()
+            conn.close()
+        except:
+            pass
+
+    return jsonify({'fulfillmentText': response_text})
+def order_tracking(req):
+    parameters = req.get("queryResult", {}).get("parameters", {})
+    order_id = parameters.get("order_id", None)
+
+    if not order_id:
+        return jsonify({
+            "fulfillmentText": "Please provide a valid Order ID to track your order. For example, you can say 'My order ID is 12345'."
+        })
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        # Query the order_tracking table to fetch the status of the order
+        cursor.execute("SELECT status FROM order_tracking WHERE order_id = %s", (order_id,))
+        result = cursor.fetchone()
+
+        if result:
+            status = result['status']
+            return jsonify({
+                "fulfillmentText": f"🆔 Order ID: {order_id}\n📦 Status: {status}. \n🚚 Your order is being processed and will be dispatched soon."
+            })
+        else:
+            return jsonify({
+                "fulfillmentText": f"❌ No order found with Order ID: {order_id}. Please check and try again."
+            })
+
+    except Exception as e:
+        print("Error tracking order:", e)
+        return jsonify({
+            "fulfillmentText": f"❌ Error while tracking your order: {str(e)}. Please try again later."
+        })
+
+    finally:
+        cursor.close()
+        conn.close()
+def add_to_cart(req):
+    parameters = req.get('queryResult', {}).get('parameters', {})
+    items = parameters.get('food_items', [])
+    quantities = parameters.get('number', [])
+
+    # Ensure items is a list
+    if isinstance(items, str):
+        items = [items]
+    elif not isinstance(items, list):
+        items = list(items)
+
+    # Ensure quantities is a list
+    if isinstance(quantities, (int, float)):
+        quantities = [quantities]
+    elif not isinstance(quantities, list):
+        quantities = list(quantities)
+
+    # Safety check: length match
+    if len(items) != len(quantities):
+        return jsonify({'fulfillmentText': "Mismatch between items and quantities."})
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        # Create a new order without user_id if not used anymore
+        cursor.execute("INSERT INTO orders () VALUES ()")
+        conn.commit()
+        new_order_id = cursor.lastrowid
+
+        # Insert each item into the cart
+        for item, quantity in zip(items, quantities):
+            cursor.execute(
+                "INSERT INTO cart (order_id, food_item, quantity) VALUES (%s, %s, %s)",
+                (new_order_id, item, quantity)
             )
-            cursor = conn.cursor()
 
-            insert_query = "INSERT INTO cart (user_id, food_item, quantity) VALUES (%s, %s, %s)"
-            cursor.execute(insert_query, (user_id, food_item, quantity))
-            conn.commit()
+        conn.commit()
+        response_text = f"{', '.join([f'{q} x {item}' for q, item in zip(quantities, items)])} added to your order (Order ID: {new_order_id})."
 
-            response_text = f"{quantity} {food_item}(s) added to your cart. Your user ID is {user_id}. Please save this ID to view your cart later."
+    except Exception as e:
+        logging.error(f"Error adding items to cart: {str(e)}")
+        response_text = f"Error adding items to cart: {e}"
 
-        except Exception as e:
-            print("Database Error:", e)
-            response_text = "There was an error adding the item to your cart."
+    finally:
+        cursor.close()
+        conn.close()
 
-        finally:
-            if 'cursor' in locals(): cursor.close()
-            if 'conn' in locals(): conn.close()
+    return jsonify({'fulfillmentText': response_text})
+def submit_feedback(req):
+    # Extract feedback details from the request
+    parameters = req.get('queryResult', {}).get('parameters', {})
+    feedback_text = parameters.get('feedback', '')
+    user_id = parameters.get('user_id', '')
 
-    elif intent == 'ViewCart':
-        user_id = parameters.get('user_id', 1)
+    # Validate that feedback and user_id are provided
+    if not feedback_text:
+        return jsonify({'fulfillmentText': "Please provide your feedback."})
+    
+    if not user_id:
+        return jsonify({'fulfillmentText': "Please provide a valid user ID to submit feedback."})
 
-        try:
-            conn = mysql.connector.connect(
-                host="localhost",
-                user="root",
-                password="",
-                database="restaurant_chatbot"
-            )
-            cursor = conn.cursor()
+    try:
+        # Log the feedback details for debugging
+        app.logger.info(f"Received feedback from user {user_id}: {feedback_text}")
+        
+        # Connect to the database
+        conn = get_db_connection()
+        cursor = conn.cursor()
 
-            cursor.execute("SELECT food_item, quantity FROM cart WHERE user_id = %s", (user_id,))
-            rows = cursor.fetchall()
+        # Check if the user exists before saving feedback
+        cursor.execute("SELECT user_id FROM users WHERE user_id = %s", (user_id,))
+        user_exists = cursor.fetchone()
 
-            if rows:
-                cart_items = "\n".join([f"{qty} x {item}" for item, qty in rows])
-                response_text = f"Your cart contains:\n{cart_items}"
-            else:
-                response_text = "Your cart is currently empty."
+        if not user_exists:
+            return jsonify({'fulfillmentText': "User not found. Please register first."})
 
-        except Exception as e:
-            print("ViewCart Error:", e)
-            response_text = "Unable to fetch your cart items."
+        # Insert feedback into the database
+        cursor.execute(
+            "INSERT INTO feedback (user_id, feedback_text) VALUES (%s, %s)",
+            (user_id, feedback_text)
+        )
 
-        finally:
-            if 'cursor' in locals(): cursor.close()
-            if 'conn' in locals(): conn.close()
+        conn.commit()
+        response_text = f"Thank you for your feedback! You said: {feedback_text}"
 
-    return jsonify({
-        "fulfillmentText": response_text
-    })
+    except Exception as e:
+        logging.error(f"Error submitting feedback: {str(e)}")
+        response_text = f"Error submitting feedback: {e}"
+
+    finally:
+        cursor.close()
+        conn.close()
+
+    return jsonify({'fulfillmentText': response_text})
+
+
+# Placeholder functions for the other intents
+def modify_reservation(req): return jsonify({'fulfillmentText': 'Modify reservation functionality coming soon.'})
+def track_order(req): return jsonify({'fulfillmentText': 'Track order functionality coming soon.'})
+def view_cart(req): return jsonify({'fulfillmentText': 'View cart functionality coming soon.'})
+def modify_order(req): return jsonify({'fulfillmentText': 'Modify order functionality coming soon.'})
 
 if __name__ == '__main__':
     app.run(debug=True)
