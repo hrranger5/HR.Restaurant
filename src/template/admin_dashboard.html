@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard - HR Restaurant</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="{{ url_for('static', filename='css/styles.css') }}" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+    }
+    .dashboard-card {
+      background: #fff;
+      border-radius: 15px;
+      padding: 20px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+      margin-bottom: 20px;
+    }
+    .stats-number {
+      font-size: 2rem;
+      font-weight: bold;
+      color: #D70F64;
+    }
+    .stats-label {
+      font-size: 1rem;
+      color: #888;
+    }
+    .table thead {
+      background-color: #D70F64;
+      color: white;
+    }
+    .nav-link.active {
+      background-color: #D70F64 !important;
+    }
+    .btn-primary {
+      background-color: #D70F64;
+      border: none;
+    }
+    .btn-success {
+      background-color: #28a745;
+      border: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="d-flex">
+    <!-- Sidebar -->
+    <div class="d-flex flex-column flex-shrink-0 p-3 text-white bg-dark sidebar">
+      <a href="/admin" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none">
+        <i class="bi bi-shield-lock me-2"></i>
+        <span class="fs-4">Admin Panel</span>
+      </a>
+      <hr>
+      <ul class="nav nav-pills flex-column mb-auto">
+        <li class="nav-item">
+          <a href="/admin" class="nav-link active text-white">
+            <i class="bi bi-speedometer2 me-2"></i>
+            Dashboard
+          </a>
+        </li>
+        <li><a href="/admin/reservations" class="nav-link text-white"><i class="bi bi-calendar-check me-2"></i> Reservations</a></li>
+        <li><a href="/admin/feedback" class="nav-link text-white"><i class="bi bi-chat-dots me-2"></i> Feedback</a></li>
+        <li><a href="/admin/setting" class="nav-link text-white"><i class="bi bi-gear me-2"></i> Settings</a></li>
+      </ul>
+      <hr>
+      <div class="dropdown">
+        <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
+          <img src="https://github.com/mdo.png" alt="" width="32" height="32" class="rounded-circle me-2">
+          <strong>Admin</strong>
+        </a>
+        <ul class="dropdown-menu dropdown-menu-dark text-small shadow" aria-labelledby="dropdownUser1">
+          <li><a class="dropdown-item" href="/admin/profile">Settings</a></li>
+          <li><hr class="dropdown-divider"></li>
+          <li><a class="dropdown-item" href="{{ url_for('logout') }}">Sign out</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="flex-grow-1 p-4">
+      <h2 class="mb-4">Admin Dashboard</h2>
+      <div class="row">
+        <div class="col-md-3"><div class="dashboard-card"><div class="stats-number">{{ total_users }}</div><div class="stats-label">Total Users</div></div></div>
+        <div class="col-md-3"><div class="dashboard-card"><div class="stats-number">{{ total_orders }}</div><div class="stats-label">Total Orders</div></div></div>
+        <div class="col-md-3"><div class="dashboard-card"><div class="stats-number">${{ revenue }}</div><div class="stats-label">Revenue</div></div></div>
+        <div class="col-md-3"><div class="dashboard-card"><div class="stats-number">{{ pending_reservations }}</div><div class="stats-label">Pending Reservations</div></div></div>
+      </div>
+
+      <!-- Charts -->
+      <div class="row mt-4">
+        <div class="col-md-6">
+          <div class="dashboard-card">
+            <h3 class="mb-4">Sales Overview</h3>
+            <canvas id="salesChart"></canvas>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="dashboard-card">
+            <h3 class="mb-4">Popular Items</h3>
+            <canvas id="itemsChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Orders -->
+      <div class="dashboard-card mt-4">
+        <h3 class="mb-4">Recent Orders</h3>
+        <div class="table-responsive">
+          <table class="table">
+            <thead><tr><th>Order ID</th><th>Customer</th><th>Items</th><th>Total</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody>
+              {% for order in recent_orders %}
+              <tr>
+                <td>#{{ order.id }}</td>
+                <td>{{ order.customer }}</td>
+                <td>{{ order.items }}</td>
+                <td>${{ order.total }}</td>
+                <td><span class="badge bg-{{ order.status_color }}">{{ order.status }}</span></td>
+                <td><button class="btn btn-sm btn-primary">View</button> <button class="btn btn-sm btn-success">Update</button></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const salesCtx = document.getElementById('salesChart').getContext('2d');
+    new Chart(salesCtx, {
+      type: 'line',
+      data: {
+        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+        datasets: [{ label: 'Sales', data: [12, 19, 3, 5, 2, 3], borderColor: '#D70F64', tension: 0.1 }]
+      }
+    });
+
+    const itemsCtx = document.getElementById('itemsChart').getContext('2d');
+    new Chart(itemsCtx, {
+      type: 'doughnut',
+      data: {
+        labels: ['Pizza', 'Burger', 'Pasta', 'Salad'],
+        datasets: [{
+          data: [12, 19, 3, 5],
+          backgroundColor: ['#D70F64', '#b80c54', '#ff4081', '#ff80ab']
+        }]
+      }
+    });
+  </script>
+</body>
+</html>
