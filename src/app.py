@@ -21,6 +21,8 @@ import logging
 import uuid
 from dateutil.parser import parse as parse_datetime
 
+
+
 app = Flask(__name__)
 
 logging.basicConfig(level=logging.DEBUG)
@@ -58,7 +60,7 @@ mail = Mail(app)
 
 @app.route('/')
 def home():
-    # Pass user info to index template if logged in
+    
     user_data = None
     if 'user_id' in session:
         user_data = {
@@ -127,10 +129,10 @@ def login():
         """, (email,))
         user = cursor.fetchone()
         
-        if user and bcrypt.check_password_hash(user['password_hash'], password):
+        if user and bcrypt.checkpw(password.encode('utf-8'), user['password_hash'].encode('utf-8')):
             session['user_id'] = user['user_id']
             session['username'] = user['username']
-            session['user_role'] = user['role']  # ✅ This must match what the decorator checks
+            session['user_role'] = user['role']  
 
             
             # Redirect based on role
@@ -156,64 +158,34 @@ def admin_required(f):
             return redirect(url_for('login'))
         return f(*args, **kwargs)
     return decorated_function
-
-
 @app.route('/admin')
 @admin_required
 def admin_dashboard():
     conn = get_db_connection()
     cursor = conn.cursor()
-
-    # Total Users
     cursor.execute("SELECT COUNT(*) AS total_users FROM users")
     users = cursor.fetchone()[0]  # Access the first element of the tuple
-
-    # Total Orders
     cursor.execute("SELECT COUNT(*) AS total_orders FROM orders")
     orders = cursor.fetchone()[0]  # Access the first element of the tuple
-
-    # Total Revenue (example)
-    cursor.execute("SELECT SUM(total_amount) AS total_revenue FROM orders")
-    revenue = cursor.fetchone()[0]  # Access the first element of the tuple
-
-    # Pending Reservations
-    cursor.execute("SELECT COUNT(*) AS pending_reservations FROM reservations WHERE status = 'Pending'")
-    reservations = cursor.fetchone()[0]  # Access the first element of the tuple
-
-    # Recent Orders (example)
-    cursor.execute("SELECT order_id, created_at, total_amount FROM orders ORDER BY created_at DESC LIMIT 5")
-    recent_orders = cursor.fetchall()
-
+    
     cursor.close()
     conn.close()
-
     return render_template('admin_dashboard.html', 
                            total_users=users, 
-                           total_orders=orders, 
-                           revenue=revenue, 
-                           pending_reservations=reservations, 
-                           recent_orders=recent_orders)
+                           total_orders=orders)
 
-
-
-#------------------ Admin Orders ------------------#
 @app.route('/admin/orders')
 @admin_required
 def admin_orders():
     if 'user_role' not in session or session['user_role'] != 'admin':
         flash("Admin access required.", "danger")
         return redirect(url_for('login'))
-
     conn = get_db_connection()
     cursor = conn.cursor()
-
     cursor.execute("SELECT * FROM orders ORDER BY created_at DESC")
     orders = cursor.fetchall()
-
     conn.close()
     return render_template('orders.html', orders=orders)
-
-#------------------ Admin Reservations ------------------#
 @app.route('/admin/reservations')
 @admin_required
 def admin_reservations():
@@ -223,150 +195,186 @@ def admin_reservations():
 
     conn = get_db_connection()
     cursor = conn.cursor()
-
-    cursor.execute("SELECT * FROM reservations ORDER BY reservation_date DESC")
-    reservations = cursor.fetchall()
-
+    cursor.execute("SELECT id, person, phone, guests, date_time FROM reservations ORDER BY date_time DESC")
+    rows = cursor.fetchall()
     conn.close()
+
+    # Convert tuple rows to list of dictionaries
+    reservations = []
+    for row in rows:
+        reservations.append({
+            'id': row[0],
+            'person': row[1],
+            'phone': row[2],
+            'guests': row[3],
+            'date_time': row[4]
+        })
+
     return render_template('reservations.html', reservations=reservations)
 
-#------------------ Admin Feedback ------------------#
+@app.route('/admin/reservations/cancel/<int:reservation_id>', methods=['POST'])
+@admin_required
+def cancel_reservation(reservation_id):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM reservations WHERE id = %s", (reservation_id,))
+    conn.commit()
+    conn.close()
+    flash("Reservation cancelled successfully.", "success")
+    return redirect(url_for('admin_reservations'))
+
+@app.route('/view_reservation/<int:reservation_id>', methods=['GET'])
+def view_reservation(reservation_id):
+    # Fetch reservation details from the database
+    reservation = get_reservation_by_id(reservation_id)  # Example function
+    return render_template('reservations', reservation=reservation)
+
 @app.route('/admin/feedback')
 @admin_required
 def admin_feedback():
     if 'user_role' not in session or session['user_role'] != 'admin':
         flash("Admin access required.", "danger")
         return redirect(url_for('login'))
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    # Join feedback with users to get feedback_text and user details
+    query = """
+        SELECT feedback.feedback_id, feedback.feedback_text, feedback.timestamp, users.username 
+        FROM feedback
+        JOIN users ON feedback.user_id = users.user_id
+        ORDER BY feedback.timestamp DESC
+    """
+    cursor.execute(query)
+    feedbacks = cursor.fetchall()
+    conn.close()
+    
+    return render_template('feedback.html', feedbacks=feedbacks)
+@app.route('/admin/feedback/delete/<int:feedback_id>', methods=['GET'])
+@admin_required
+def delete_feedback(feedback_id):
+    if 'user_role' not in session or session['user_role'] != 'admin':
+        flash("Admin access required.", "danger")
+        return redirect(url_for('login'))
 
+    # Connect to the database
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    # Update the query to use 'created_at' instead of 'submitted_at'
-    cursor.execute("SELECT * FROM feedback ORDER BY created_at DESC")
-    feedbacks = cursor.fetchall()
+    # SQL query to delete the feedback entry
+    cursor.execute("DELETE FROM feedback WHERE feedback_id = %s", (feedback_id,))
+    conn.commit()  # Commit the changes to the database
 
     conn.close()
-    return render_template('feedback.html', feedbacks=feedbacks)
 
-# Mock database (This will be replaced by real DB in production)
+    # Flash success message and redirect back to the feedback page
+    flash("Feedback deleted successfully.", "success")
+    return redirect(url_for('admin_feedback'))  # Redirect to the feedback page
+
 mock_db = {
     'admin': {
         'name': 'Hafsa',
         'email': 'hrranger555@gmail.com',
-        'password': '$2b$12$hNLouuoztSjQeeu8/MbOWeVIk/ufxVjfZnLd2qirnnr...',  # Hashed password
-        'profile_picture': 'default.jpg',  # Default profile picture
+        'password': '$2b$12$hNLouuoztSjQeeu8/MbOWeVIk/ufxVjfZnLd2qirnnr...',  
+        'profile_picture': 'default.jpg',  
         'status': 'active',
         'role': 'admin',
         'created_at': '2025-04-27 18:44:25'
     }
 }
 
-# Configure upload folder
 UPLOAD_FOLDER = 'static/uploads'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-
-# Function to check if file extension is allowed
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
 @app.route('/admin/setting', methods=['GET'])
 def setting():
     # Get the admin data from mock DB
     admin = mock_db.get('admin')
     return render_template('setting.html', admin=admin)
-
 @app.route('/admin/update-profile', methods=['POST'])
 def update_profile():
-    # Fetch the admin data from mock DB
     admin = mock_db.get('admin')
-
-    # Get form input values
     name = request.form['name']
     email = request.form['email']
-    password = request.form.get('password')  # Optional password change
-
-    # Update admin data
+    password = request.form.get('password')  
     admin['name'] = name
     admin['email'] = email
     if password:
-        admin['password'] = password  # Normally, hash the password before saving
-
-    # Handle profile picture upload
+        admin['password'] = password  
     if 'profile_picture' in request.files:
         file = request.files['profile_picture']
         if allowed_file(file.filename):
             filename = secure_filename(file.filename)
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            admin['profile_picture'] = filename  # Update profile picture
-
-    # Flash a success message
+            admin['profile_picture'] = filename  
     flash("Profile updated successfully!", "success")
-
-    # Redirect to settings page
     return redirect(url_for('setting'))
 
-# User Dashboard Route
+#---------------------user dashboard----------------------
 @app.route('/dashboard')
 def user_dashboard():
     if 'user_id' not in session:
         return redirect(url_for('login'))
-
+    
     user_id = session['user_id']
-    username = session['username']  # Assuming you stored the username in session when the user logged in
-
-    # Fetch recent orders from the database
-    conn = get_db_connection()  # Use the get_db_connection function here
+    username = session['username']
+    
+    # Connect to the database
+    conn = get_db_connection()
     cursor = conn.cursor()
+
+    # Fetch the last 5 orders for the user
     cursor.execute("""
-         SELECT order_id, created_at, total_amount, status 
-         FROM orders 
-         WHERE user_id = %s 
-         ORDER BY created_at DESC 
-         LIMIT 5
-        """, (user_id,))
+        SELECT order_id, user_id, order_status, created_at
+        FROM orders
+        WHERE user_id = %s
+        ORDER BY created_at DESC
+        LIMIT 5
+    """, (user_id,))  # Use user_id instead of id
     order_data = cursor.fetchall()
 
-    # Fetch upcoming reservations
+    # Fetch the upcoming 5 reservations for the user
     cursor.execute("""
-    SELECT reservation_id, reservation_date, reservation_time, num_guests, status
+    SELECT id, person, phone, guests, date_time
     FROM reservations
-    WHERE user_id = %s AND reservation_date >= %s
-    ORDER BY reservation_date ASC
+    WHERE id = %s AND date_time >= %s
+    ORDER BY date_time ASC
     LIMIT 5
-    """, (user_id, datetime.date.today()))  # Use datetime.date.today() correctly
-    reservation_data = cursor.fetchall()
+""", (id, date_time))  # If you're filtering by reservation ID instead
+ 
+    reservation_data = cursor.fetchall()  # Change to reservation_data
 
-    # Fetch cart items if applicable
+    # Get cart items from the session
     cart_items = session.get('cart_items', [])
-    cart_total = sum(item['price'] * item['quantity'] for item in cart_items)  # Calculate the total
-
-    # Process orders and reservations to add status color
+    cart_total = sum(item['price'] * item['quantity'] for item in cart_items)
+    
+    # Prepare order data for display
     orders = []
     for row in order_data:
         orders.append({
             'id': row[0],
-            'date': row[1],
-            'items': row[2],
-            'total': row[3],
-            'status': row[4],
-            'status_color': get_status_color(row[4])
+            'date': row[3],  # Assuming 'created_at' is at index 3
+            'status': row[2],  # Assuming 'order_status' is at index 2
+            'status_color': get_status_color(row[2])  # Assuming 'order_status' is at index 2
         })
 
+    # Prepare reservation data for display
     reservations = []
     for row in reservation_data:
         reservations.append({
             'id': row[0],
-            'date': row[1],
-            'time': row[2],
-            'guests': row[3],
-            'status': row[4],
-            'status_color': get_status_color(row[4])
+            'person': row[1],  # Assuming 'person' is at index 1
+            'phone': row[2],  # Assuming 'phone' is at index 2
+            'guests': row[3],  # Assuming 'guests' is at index 3
+            'date_time': row[4],  # Assuming 'date_time' is at index 4
+            'status_color': get_status_color(row[4])  # Assuming 'status' is at index 4 (if applicable)
         })
-
+    
     return render_template('user_dashboard.html', username=username, orders=orders, reservations=reservations, cart_items=cart_items, cart_total=cart_total)
 
-# Helper function to get status color for badges
 def get_status_color(status):
     color_map = {
         'Delivered': 'success',
@@ -376,32 +384,24 @@ def get_status_color(status):
     }
     return color_map.get(status, 'secondary')
 
-
-#-----forgot password route-------
+#----================-forgot password route===============-------
 
 @app.route('/forgot-password', methods=['GET', 'POST'])
 def forgot_password():
     if request.method == 'POST':
         email = request.form.get('email')
-        
-        # Verify user exists
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
         cursor.execute("SELECT user_id FROM users WHERE email = %s", (email,))
         user = cursor.fetchone()
-        
         if user:
-            # Generate and store OTP
             otp = generate_otp()
             expiry = datetime.now() + timedelta(minutes=10)
-            
             cursor.execute("""
                 INSERT INTO password_resets (user_id, otp, expires_at)
                 VALUES (%s, %s, %s)
             """, (user['user_id'], otp, expiry))
             conn.commit()
-            
-            # Send OTP email
             if send_otp_email(email, otp):
                 flash('OTP has been sent to your email.', 'success')
                 return redirect(url_for('verify_otp', email=email))
@@ -409,15 +409,11 @@ def forgot_password():
                 flash('Failed to send OTP. Please try again.', 'danger')
         else:
             flash('Email address not found.', 'danger')
-        
         cursor.close()
         conn.close()
-        
     return render_template('forgot_password.html')
 
-
-
-# Assuming you have a function to get user details from the database
+#------------------ Assuming you have a function to get user details from the database----------
 def get_user_from_db(email):
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -427,11 +423,9 @@ def get_user_from_db(email):
     conn.close()
     return user
 
-
-
 @app.route('/reset-password', methods=['GET', 'POST'])
 def reset_password():
-    otp = request.args.get('otp')  # Get OTP from URL
+    otp = request.args.get('otp')  
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
     
@@ -725,27 +719,28 @@ def api_submit_feedback():
         return jsonify({"message": "Feedback submitted successfully!"})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+#-----------------------------------wehbook connections----------------------
+
 @app.route('/webhook', methods=['POST'])
 def webhook():
+
     req = request.get_json(force=True)
     intent = req['queryResult']['intent']['displayName']
 
     if intent == 'Make Reservation':
         return make_reservation(req)
-    elif intent == 'Modify Reservation':
-        return modify_reservation(req)
-    elif intent == 'Order Tracking':  # Updated intent name
+    elif intent == 'Order Tracking':  
         return order_tracking(req)
     elif intent == 'AddToCart':
         return add_to_cart(req)
-    elif intent == 'View Cart':
-        return view_cart(req)
     elif intent == 'Place-Order':
         return place_order(req)
-    elif intent == 'Modify Order':
-        return modify_order(req)
     elif intent == 'Feedback':
         return submit_feedback(req)
+    elif intent == 'RegisterUser':
+        return register_user(req)
+
     else:
         return jsonify({'fulfillmentText': "Sorry, I couldn't understand your request."})
 
@@ -810,7 +805,7 @@ def make_reservation(req):
         formatted_date = reservation_datetime.strftime("%Y-%m-%d")
         formatted_time = reservation_datetime.strftime("%I:%M %p")
 
-        # ✅ Insert reservation into MySQL
+        
         conn = get_db_connection()
         cursor = conn.cursor()
 
@@ -840,6 +835,7 @@ def make_reservation(req):
             pass
 
     return jsonify({'fulfillmentText': response_text})
+
 def order_tracking(req):
     parameters = req.get("queryResult", {}).get("parameters", {})
     order_id = parameters.get("order_id", None)
@@ -876,6 +872,7 @@ def order_tracking(req):
     finally:
         cursor.close()
         conn.close()
+
 def add_to_cart(req):
     parameters = req.get('queryResult', {}).get('parameters', {})
     items = parameters.get('food_items', [])
@@ -925,10 +922,12 @@ def add_to_cart(req):
         conn.close()
 
     return jsonify({'fulfillmentText': response_text})
+
+
 def submit_feedback(req):
     # Extract feedback details from the request
     parameters = req.get('queryResult', {}).get('parameters', {})
-    feedback_text = parameters.get('feedback', '')
+    feedback_text = parameters.get('feedback_text', '')
     user_id = parameters.get('user_id', '')
 
     # Validate that feedback and user_id are provided
@@ -937,6 +936,14 @@ def submit_feedback(req):
     
     if not user_id:
         return jsonify({'fulfillmentText': "Please provide a valid user ID to submit feedback."})
+
+    # Define lists for detecting positive and negative feedback
+    negative_keywords = ['slow', 'cold', 'bad', 'poor', 'late', 'rude', 'unpleasant', 'worst', 'terrible', 'disappointing']
+    positive_keywords = ['good', 'excellent', 'great', 'amazing', 'tasty', 'delicious', 'friendly', 'awesome', 'perfect', 'fast']
+
+    # Determine the type of feedback (positive or negative)
+    is_negative = any(word in feedback_text.lower() for word in negative_keywords)
+    is_positive = any(word in feedback_text.lower() for word in positive_keywords)
 
     try:
         # Log the feedback details for debugging
@@ -960,7 +967,14 @@ def submit_feedback(req):
         )
 
         conn.commit()
-        response_text = f"Thank you for your feedback! You said: {feedback_text}"
+
+        # Respond based on feedback sentiment
+        if is_negative:
+            response_text = "We're sorry your experience wasn't great. We’re working to improve and appreciate your feedback."
+        elif is_positive:
+            response_text = "Thank you! We're thrilled you had a good experience. Your feedback means a lot to us!"
+        else:
+            response_text = f"Thank you for your feedback! You said: {feedback_text}"
 
     except Exception as e:
         logging.error(f"Error submitting feedback: {str(e)}")
@@ -972,12 +986,79 @@ def submit_feedback(req):
 
     return jsonify({'fulfillmentText': response_text})
 
+def handle_feedback(req):
+    # Extract the query text to detect "register me" intent
+    query_text = req.get('queryResult', {}).get('queryText', '').lower()
 
-# Placeholder functions for the other intents
-def modify_reservation(req): return jsonify({'fulfillmentText': 'Modify reservation functionality coming soon.'})
-def track_order(req): return jsonify({'fulfillmentText': 'Track order functionality coming soon.'})
-def view_cart(req): return jsonify({'fulfillmentText': 'View cart functionality coming soon.'})
-def modify_order(req): return jsonify({'fulfillmentText': 'Modify order functionality coming soon.'})
+    # If the user says something like "OK" or "Register me"
+    if "register me" in query_text or "ok" in query_text:
+        return jsonify({
+            'fulfillmentText': "Great! Let's get started with your registration. Please provide your name."
+        })
+    
+    # Extract other parameters for feedback if needed (handling feedback intent)
+    parameters = req.get('queryResult', {}).get('parameters', {})
+    feedback_text = parameters.get('feedback_text', '')
+    user_id = parameters.get('user_id', '')
+
+    # If user is providing feedback, process it
+    if feedback_text:
+        return submit_feedback(req)
+
+    return jsonify({
+        'fulfillmentText': "Sorry, I didn't understand that. Can you please clarify?"
+    })
+
+import bcrypt
+
+def register_user(req):
+    cursor = None
+    conn = None
+
+    parameters = req.get('queryResult', {}).get('parameters', {})
+    user_name = parameters.get('person', {}).get('name', '')
+    user_email = parameters.get('email', '')
+    user_password = parameters.get('password', '')
+
+    if not user_name:
+        return jsonify({'fulfillmentText': "Please provide your name."})
+    if not user_email:
+        return jsonify({'fulfillmentText': "Please provide your email."})
+    if not user_password:
+        return jsonify({'fulfillmentText': "Please provide a password."})
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        # Check if email already exists
+        cursor.execute("SELECT * FROM users WHERE email = %s", (user_email,))
+        existing_user = cursor.fetchone()
+        if existing_user:
+            return jsonify({'fulfillmentText': "This email is already registered. Please log in instead."})
+
+        # Hash the password using bcrypt
+        hashed_password = bcrypt.hashpw(user_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+
+
+        # Insert new user
+        cursor.execute("""
+            INSERT INTO users (username, email, password_hash)
+            VALUES (%s, %s, %s)
+        """, (user_name, user_email, hashed_password))
+
+        conn.commit()
+        return jsonify({'fulfillmentText': f"🎉 Thank you {user_name}, you are successfully registered!"})
+
+    except Exception as e:
+        print("Error during registration:", e)  # Log the exception
+        return jsonify({'fulfillmentText': f"⚠️ Error occurred during registration. Please try again later. Details: {str(e)}"})
+
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
 
 if __name__ == '__main__':
     app.run(debug=True)
