@@ -109,8 +109,8 @@
           <li class="nav-item"><a class="nav-link" href="#menu">Menu</a></li>
           <li class="nav-item"><a class="nav-link" href="#reservation">Reservations</a></li>
           {% if session.get('user_id') %}
-            <li class="nav-item"><a class="nav-link" href="{{ url_for('dashboard') }}">Dashboard</a></li>
-            <li class="nav-item"><a class="btn btn-light ms-2" href="{{ url_for('logout') }}">Logout</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('user_dashboard') }}">Dashboard</a></li>
+            
           {% else %}
             <li class="nav-item"><a class="btn btn-light ms-2" href="{{ url_for('login') }}">Login</a></li>
           {% endif %}
@@ -321,7 +321,8 @@ if (action === 'reservation') {
   // Show modal or scroll to section instead of redirect
   document.getElementById("reservation-section").scrollIntoView({ behavior: "smooth" });
 } else {
-  window.location.href = "{{ url_for('order') }}";
+  window.location.href = "{{ url_for('admin_orders') }}";
+
 }
 return false;
 
