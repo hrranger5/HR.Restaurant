@@ -20,6 +20,8 @@ import datetime
 import logging
 import uuid
 from dateutil.parser import parse as parse_datetime
+from werkzeug.utils import secure_filename
+
 
 
 
@@ -57,6 +59,20 @@ app.config['MAIL_USE_TLS'] = False
 app.config['MAIL_USE_SSL'] = True
 
 mail = Mail(app)
+
+def send_otp_email(email, otp):
+    try:
+        msg = Message(
+            subject="Password Reset OTP",
+            sender=app.config['MAIL_USERNAME'],
+            recipients=[email]
+        )
+        msg.body = f"Your OTP for password reset is: {otp}. It is valid for 10 minutes."
+        mail.send(msg)
+        return True
+    except Exception as e:
+        print(f"Failed to send OTP email: {e}")
+        return False
 
 @app.route('/')
 def home():
@@ -158,6 +174,7 @@ def admin_required(f):
             return redirect(url_for('login'))
         return f(*args, **kwargs)
     return decorated_function
+
 @app.route('/admin')
 @admin_required
 def admin_dashboard():
@@ -186,6 +203,7 @@ def admin_orders():
     orders = cursor.fetchall()
     conn.close()
     return render_template('orders.html', orders=orders)
+
 @app.route('/admin/reservations')
 @admin_required
 def admin_reservations():
@@ -223,11 +241,15 @@ def cancel_reservation(reservation_id):
     flash("Reservation cancelled successfully.", "success")
     return redirect(url_for('admin_reservations'))
 
-@app.route('/view_reservation/<int:reservation_id>', methods=['GET'])
-def view_reservation(reservation_id):
-    # Fetch reservation details from the database
-    reservation = get_reservation_by_id(reservation_id)  # Example function
-    return render_template('reservations', reservation=reservation)
+def get_reservation_by_id(reservation_id):
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT * FROM reservations WHERE id = %s", (reservation_id,))
+    reservation = cursor.fetchone()
+    cursor.close()
+    conn.close()
+    return reservation
+
 
 @app.route('/admin/feedback')
 @admin_required
@@ -313,76 +335,82 @@ def update_profile():
     flash("Profile updated successfully!", "success")
     return redirect(url_for('setting'))
 
-#---------------------user dashboard----------------------
-@app.route('/dashboard')
+@app.route('/user_dashboard')
 def user_dashboard():
-    if 'user_id' not in session:
+    if 'username' not in session:
         return redirect(url_for('login'))
-    
-    user_id = session['user_id']
-    username = session['username']
-    
-    # Connect to the database
-    conn = get_db_connection()
-    cursor = conn.cursor()
 
-    # Fetch the last 5 orders for the user
+    username = session['username']
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True, buffered=True)
+
+    # 📦 1. Get user_id from the users table
+    cursor.execute("SELECT user_id, email, phone FROM users WHERE username = %s", (username,))
+    user = cursor.fetchone()
+
+    if not user:
+        cursor.close()
+        conn.close()
+        return redirect(url_for('logout'))
+
+    user_id = user['user_id']
+    email = user['email']
+    phone = user['phone']
+
+    # 🧾 2. Fetch recent orders
     cursor.execute("""
-        SELECT order_id, user_id, order_status, created_at
+        SELECT order_id,user_id, order_status, created_at
         FROM orders
         WHERE user_id = %s
         ORDER BY created_at DESC
         LIMIT 5
-    """, (user_id,))  # Use user_id instead of id
-    order_data = cursor.fetchall()
+    """, (user_id,))
+    recent_orders = cursor.fetchall()
 
-    # Fetch the upcoming 5 reservations for the user
+    # Process recent orders
+    if not recent_orders:
+        recent_orders = [{
+            'order_id': 'N/A',
+            'user_id': ' ',
+            'order_status': 'No Orders',
+            'created_at': 'N/A',
+            'status_color': 'secondary'
+        }]
+    else:
+        for order in recent_orders:
+            status = order['order_status']
+            if status == 'Completed':
+                order['status_color'] = 'success'
+            elif status == 'Pending':
+                order['status_color'] = 'warning'
+            else:
+                order['status_color'] = 'danger'
+
+    # 📅 3. Fetch upcoming reservations
     cursor.execute("""
-    SELECT id, person, phone, guests, date_time
-    FROM reservations
-    WHERE id = %s AND date_time >= %s
-    ORDER BY date_time ASC
-    LIMIT 5
-""", (id, date_time))  # If you're filtering by reservation ID instead
- 
-    reservation_data = cursor.fetchall()  # Change to reservation_data
+        SELECT date_time, guests
+        FROM reservations
+        WHERE person = %s
+        ORDER BY date_time ASC
+        LIMIT 5
+    """, (username,))
+    upcoming_reservations = cursor.fetchall()
 
-    # Get cart items from the session
-    cart_items = session.get('cart_items', [])
-    cart_total = sum(item['price'] * item['quantity'] for item in cart_items)
-    
-    # Prepare order data for display
-    orders = []
-    for row in order_data:
-        orders.append({
-            'id': row[0],
-            'date': row[3],  # Assuming 'created_at' is at index 3
-            'status': row[2],  # Assuming 'order_status' is at index 2
-            'status_color': get_status_color(row[2])  # Assuming 'order_status' is at index 2
-        })
+    # Process upcoming reservations
+    for res in upcoming_reservations:
+        res['status'] = 'Confirmed'
+        res['status_color'] = 'info'
 
-    # Prepare reservation data for display
-    reservations = []
-    for row in reservation_data:
-        reservations.append({
-            'id': row[0],
-            'person': row[1],  # Assuming 'person' is at index 1
-            'phone': row[2],  # Assuming 'phone' is at index 2
-            'guests': row[3],  # Assuming 'guests' is at index 3
-            'date_time': row[4],  # Assuming 'date_time' is at index 4
-            'status_color': get_status_color(row[4])  # Assuming 'status' is at index 4 (if applicable)
-        })
-    
-    return render_template('user_dashboard.html', username=username, orders=orders, reservations=reservations, cart_items=cart_items, cart_total=cart_total)
+    cursor.close()
+    conn.close()
 
-def get_status_color(status):
-    color_map = {
-        'Delivered': 'success',
-        'In Progress': 'warning',
-        'Cancelled': 'danger',
-        'Confirmed': 'info',
-    }
-    return color_map.get(status, 'secondary')
+    # Render the template with the fetched data
+    return render_template("user_dashboard.html",
+                           username=username,
+                           email=email,
+                           phone=phone,
+                           recent_orders=recent_orders,
+                           upcoming_reservations=upcoming_reservations)
 
 #----================-forgot password route===============-------
 
@@ -428,40 +456,40 @@ def reset_password():
     otp = request.args.get('otp')  
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
-    
-    # Verify OTP
+
+    # ✅ Verify OTP using password_resets
     cursor.execute("""
-        SELECT user_id FROM otp_resets 
+        SELECT user_id FROM password_resets 
         WHERE otp = %s AND expires_at > NOW() AND used = 0
     """, (otp,))
     reset = cursor.fetchone()
-    
+
     if not reset:
         flash('Invalid or expired OTP.', 'danger')
         return redirect(url_for('forgot_password'))
-    
+
     if request.method == 'POST':
         password = request.form.get('password')
         confirm_password = request.form.get('confirm_password')
-        
+
         if password != confirm_password:
             flash('Passwords do not match.', 'danger')
         else:
-            # Update password
+            # ✅ Update user's password
             hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
             cursor.execute("""
                 UPDATE users SET password_hash = %s WHERE user_id = %s
             """, (hashed_password, reset['user_id']))
-            
-            # Mark OTP as used
+
+            # ✅ Mark OTP as used
             cursor.execute("""
-                UPDATE otp_resets SET used = 1 WHERE otp = %s
+                UPDATE password_resets SET used = 1 WHERE otp = %s
             """, (otp,))
-            
+
             conn.commit()
             flash('Your password has been updated.', 'success')
             return redirect(url_for('login'))
-    
+
     cursor.close()
     conn.close()
     return render_template('reset_password.html', otp=otp)
@@ -488,9 +516,9 @@ def verify_otp():
             cursor.execute("UPDATE password_resets SET used = 1 WHERE otp = %s", (otp,))
             conn.commit()
             
-            # Generate password reset token
-            token = secrets.token_urlsafe(32)
-            return redirect(url_for('reset_password', token=token))
+            
+            
+            return redirect(url_for('reset_password', otp=otp))
         else:
             flash('Invalid or expired OTP.', 'danger')
         
@@ -523,226 +551,38 @@ def logout():
     flash("You have been logged out", "info")
     return redirect(url_for('login'))
 
-# Menu routes
-@app.route('/menu')
-def menu():
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-    cursor.execute("SELECT * FROM menu_items")
-    menu_items = cursor.fetchall()
-    cursor.close()
-    conn.close()
-    return render_template('menu.html', menu_items=menu_items)
-
-@app.route('/get_menu', methods=['GET'])
-def get_menu():
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-    cursor.execute("SELECT * FROM menu_items")
-    menu = cursor.fetchall()
-    cursor.close()
-    conn.close()
-    return jsonify(menu)
-
-# Order routes
-@app.route('/order')
-def order():
-    if 'user_id' not in session:
-        flash("Please login to place an order", "warning")
-        return redirect(url_for('login'))
-        
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-    cursor.execute("SELECT * FROM menu_items")
-    menu_items = cursor.fetchall()
-    cursor.close()
-    conn.close()
-    
-    return render_template('order.html', menu_items=menu_items)
-
-@app.route('/place_order', methods=['POST'])
-def place_order():
-    if 'user_id' not in session:
-        if request.is_json:
-            return jsonify({"error": "Authentication required"}), 401
-        else:
-            flash("Please login to place an order", "warning")
-            return redirect(url_for('login'))
-    
-    user_id = session['user_id']
-    
-    try:
-        # Get order items from form or JSON
-        items = request.json.get('items') if request.is_json else request.form.getlist('items')
-        
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        
-        # Create order record
-        cursor.execute("INSERT INTO orders (user_id, order_status) VALUES (%s, %s)", 
-                      (user_id, 'pending'))
-        conn.commit()
-        order_id = cursor.lastrowid
-        
-        # Add order items
-        for item in items:
-            item_id = item.get('item_id') if request.is_json else item
-            quantity = item.get('quantity', 1) if request.is_json else 1
-            cursor.execute("INSERT INTO order_items (order_id, item_id, quantity) VALUES (%s, %s, %s)",
-                          (order_id, item_id, quantity))
-        
-        conn.commit()
-        cursor.close()
-        conn.close()
-        
-        if request.is_json:
-            return jsonify({"message": "Order placed successfully!", "order_id": order_id}), 201
-        else:
-            flash("Order placed successfully!", "success")
-            return redirect(url_for('myorders'))
-            
-    except Exception as e:
-        if request.is_json:
-            return jsonify({"error": str(e)}), 500
-        else:
-            flash(f"Error placing order: {str(e)}", "danger")
-            return redirect(url_for('order'))
-
-
-# Feedback routes
-@app.route('/feedback', methods=['GET', 'POST'])
-def feedback():
-    if 'user_id' not in session:
-        return redirect(url_for('login'))
-    
-    if request.method == 'POST':
-        user_id = session['user_id']
-        rating = request.form.get('rating')
-        comments = request.form.get('comments')
-        
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        
-        try:
-            cursor.execute("""
-                INSERT INTO feedback (user_id, rating, comments)
-                VALUES (%s, %s, %s)
-            """, (user_id, rating, comments))
-            
-            conn.commit()
-            flash("Thank you for your feedback!", "success")
-            
-        except Exception as e:
-            flash(f"Error submitting feedback: {str(e)}", "danger")
-            
-        finally:
-            cursor.close()
-            conn.close()
-            
-        return redirect(url_for('feedback'))
-        
-    # GET request - show form
-    return render_template('feedback.html')
-
-# Order tracking
-@app.route('/track_order', methods=['GET', 'POST'])
-def track_order():
-    if request.method == 'POST':
-        order_id = request.form.get('order_id') or request.json.get('order_id')
-        
-        conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT * FROM orders WHERE order_id=%s", (order_id,))
-        order = cursor.fetchone()
-        cursor.close()
-        conn.close()
-
-        if order:
-            if request.is_json:
-                return jsonify({"status": order['order_status']})
-            else:
-                return render_template('track_order.html', order=order)
-        else:
-            if request.is_json:
-                return jsonify({"error": "Invalid Order ID"}), 404
-            else:
-                flash("Invalid Order ID", "danger")
-                return render_template('track_order.html')
-    
-    # GET request - show form
-    return render_template('track_order.html')
-
-# API endpoints
-@app.route('/api/order_status/<int:order_id>', methods=['GET'])
-@jwt_required()
-def order_status(order_id):
-    current_user = get_jwt_identity()
-    user_id = current_user.get('user_id')
-    
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-    
-    # Add user_id check for security
-    cursor.execute("""
-        SELECT order_status FROM orders 
-        WHERE order_id=%s AND user_id=%s
-    """, (order_id, user_id))
-    
-    result = cursor.fetchone()
-    cursor.close()
-    conn.close()
-
-    if result:
-        return jsonify({"order_status": result['order_status']})
-    return jsonify({"message": "Order not found"}), 404
-
-@app.route('/api/submit_feedback', methods=['POST'])
-@jwt_required()
-def api_submit_feedback():
-    current_user = get_jwt_identity()
-    user_id = current_user.get('user_id')
-    data = request.json
-
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-    try:
-        cursor.execute("""
-            INSERT INTO feedback (user_id, rating, comments)
-            VALUES (%s, %s, %s)
-        """, (user_id, data.get("rating"), data.get("comments")))
-        
-        conn.commit()
-        cursor.close()
-        conn.close()
-        
-        return jsonify({"message": "Feedback submitted successfully!"})
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-#-----------------------------------wehbook connections----------------------
+#-----------------------------------Webhook Connection----------------------
 
 @app.route('/webhook', methods=['POST'])
 def webhook():
+    try:
+        req = request.get_json(force=True)
+        intent = req['queryResult']['intent']['displayName']
 
-    req = request.get_json(force=True)
-    intent = req['queryResult']['intent']['displayName']
+        logging.debug(f"Received intent: {intent}")
+        
+        if intent == 'Make Reservation':
+            return make_reservation(req)
+        elif intent == 'Order Tracking':
+            return order_tracking(req)
+        elif intent == 'AddToCart':
+            return add_to_cart(req)
+        elif intent == 'Place-Order':
+            return place_order(req)
+        elif intent == 'Feedback':
+            return submit_feedback(req)
+        elif intent == 'RegisterUser':
+            return register_user(req)
+        elif intent == 'Order Status':
+            return get_order_status(req)
+        
+        else:
+            return jsonify({'fulfillmentText': "Sorry, I couldn't understand your request."}), 400
 
-    if intent == 'Make Reservation':
-        return make_reservation(req)
-    elif intent == 'Order Tracking':  
-        return order_tracking(req)
-    elif intent == 'AddToCart':
-        return add_to_cart(req)
-    elif intent == 'Place-Order':
-        return place_order(req)
-    elif intent == 'Feedback':
-        return submit_feedback(req)
-    elif intent == 'RegisterUser':
-        return register_user(req)
+    except Exception as e:
+        logging.error(f"Error in webhook: {e}")
+        return jsonify({'fulfillmentText': "Sorry, an error occurred. Please try again later."}), 500
 
-    else:
-        return jsonify({'fulfillmentText': "Sorry, I couldn't understand your request."})
 
 def place_order(req):
     params = req.get("queryResult", {}).get("parameters", {})
@@ -779,6 +619,40 @@ def place_order(req):
         print("Order placement error:", e)
         return jsonify({"fulfillmentText": "Something went wrong while placing your order. Please try again."})
 
+def get_order_status(req):
+    params = req.get("queryResult", {}).get("parameters", {})
+    order_id = params.get("order_id")  # Directly extract without indexing
+    email = params.get("email")  # Directly extract without indexing
+
+    if not order_id or not email:
+        return jsonify({
+            'fulfillmentText': "Please provide both your order ID and email to check your order status."
+        })
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Fixed query to join the 'orders' and 'users' tables
+        cursor.execute("""
+            SELECT o.order_status 
+            FROM orders o
+            JOIN users u ON o.user_id = u.user_id
+            WHERE o.order_id = %s AND u.email = %s
+        """, (order_id, email))
+        
+        result = cursor.fetchone()
+        conn.close()
+
+        if result:
+            return jsonify({'fulfillmentText': f"Your order #{order_id} is currently '{result[0]}'."})
+        else:
+            return jsonify({'fulfillmentText': "Order not found or details are incorrect."})
+
+    except Exception as e:
+        print("Order status error:", e)
+        return jsonify({'fulfillmentText': "Something went wrong while checking your order. Please try again."})
+
 def make_reservation(req):
     from datetime import datetime
     import logging
@@ -786,7 +660,6 @@ def make_reservation(req):
     params = req.get("queryResult", {}).get("parameters", {})
 
     try:
-        # 🔧 FIX: extract 'name' from nested dictionary
         name = params.get("person", {}).get("name", "Guest")
         phone = params.get("phone", "N/A")
         num_guests = params.get("num_guests", 1)
@@ -794,10 +667,9 @@ def make_reservation(req):
         date_str = params.get("date", "")
         time_str = params.get("time", "")
 
-        # 🧠 Convert strings to datetime objects
+        # Convert to datetime
         date_obj = parse_datetime(date_str)
         time_obj = parse_datetime(time_str)
-
         reservation_datetime = date_obj.replace(
             hour=time_obj.hour, minute=time_obj.minute
         )
@@ -805,20 +677,23 @@ def make_reservation(req):
         formatted_date = reservation_datetime.strftime("%Y-%m-%d")
         formatted_time = reservation_datetime.strftime("%I:%M %p")
 
-        
         conn = get_db_connection()
         cursor = conn.cursor()
 
+        # Insert reservation
         cursor.execute(
             "INSERT INTO reservations (person, phone, guests, date_time) VALUES (%s, %s, %s, %s)",
             (name, phone, num_guests, reservation_datetime)
         )
-
         conn.commit()
+
+        # ✅ Get the ID of the inserted reservation
+        reservation_id = cursor.lastrowid
 
         response_text = (
             f"Thanks {name}, your table for {num_guests} guests is booked on "
-            f"{formatted_date} at {formatted_time}. We'll contact you at {phone}."
+            f"{formatted_date} at {formatted_time}. Your reservation ID is {reservation_id}. "
+            f"We'll contact you at {phone}."
         )
 
     except Exception as e:
@@ -835,6 +710,7 @@ def make_reservation(req):
             pass
 
     return jsonify({'fulfillmentText': response_text})
+
 
 def order_tracking(req):
     parameters = req.get("queryResult", {}).get("parameters", {})
