@@ -1,0 +1,202 @@
+<mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/26.2.15 Chrome/134.0.6998.205 Electron/35.2.1 Safari/537.36" version="26.2.15">
+  <diagram name="Page-1" id="623MwzP9jskFe2GeOuNU">
+    <mxGraphModel dx="1471" dy="940" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="3300" pageHeight="4681" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="AtXFw8hew1bIRvB82fqC-5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="AtXFw8hew1bIRvB82fqC-3" target="AtXFw8hew1bIRvB82fqC-4" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="AtXFw8hew1bIRvB82fqC-3" value="&lt;b&gt;Intent: Welcome&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
+          <mxGeometry x="772.62" y="-314" width="100" height="29" as="geometry" />
+        </mxCell>
+        <mxCell id="AtXFw8hew1bIRvB82fqC-4" value="user input:&quot;Hello&quot;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
+          <mxGeometry x="770.75" y="-234" width="105" height="31" as="geometry" />
+        </mxCell>
+        <mxCell id="Hgm0fnYg0xXlylOzOT3X-1" value="Entities: None" style="whiteSpace=wrap;html=1;rounded=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="771.5" y="-201" width="105.5" height="33.5" as="geometry" />
+        </mxCell>
+        <mxCell id="Hgm0fnYg0xXlylOzOT3X-3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="Hgm0fnYg0xXlylOzOT3X-4" target="Hgm0fnYg0xXlylOzOT3X-6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="Hgm0fnYg0xXlylOzOT3X-4" value="&lt;b&gt;Intent:&amp;nbsp;&lt;/b&gt;&lt;b style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;Make Reservation&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="351" y="311.19" width="100" height="29" as="geometry" />
+        </mxCell>
+        <mxCell id="Hgm0fnYg0xXlylOzOT3X-6" value="user input:&quot;I need a reservation&quot;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="348.5" y="380" width="105" height="31" as="geometry" />
+        </mxCell>
+        <mxCell id="Hgm0fnYg0xXlylOzOT3X-7" value="Entities: person,phone&lt;div&gt;,&lt;code data-end=&quot;1542&quot; data-start=&quot;1526&quot;&gt;NumberOfGuests&lt;/code&gt;,&amp;nbsp;&lt;/div&gt;&lt;div&gt;&lt;code data-end=&quot;1550&quot; data-start=&quot;1544&quot;&gt;Date&lt;font face=&quot;Helvetica&quot;&gt;_&lt;/font&gt;&lt;/code&gt;&lt;code data-end=&quot;1558&quot; data-start=&quot;1552&quot;&gt;Time&lt;/code&gt;&lt;/div&gt;" style="whiteSpace=wrap;html=1;rounded=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="348.5" y="411" width="104" height="61.25" as="geometry" />
+        </mxCell>
+        <mxCell id="Hgm0fnYg0xXlylOzOT3X-77" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="Hgm0fnYg0xXlylOzOT3X-23" target="Hgm0fnYg0xXlylOzOT3X-42">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="Hgm0fnYg0xXlylOzOT3X-23" value="Output:&quot;Welcome to HR.Reastaurent chatbot .How can i assist you today?" style="whiteSpace=wrap;html=1;rounded=0;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="773" y="-164" width="104" height="64.5" as="geometry" />
+        </mxCell>
+        <mxCell id="Hgm0fnYg0xXlylOzOT3X-73" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="Hgm0fnYg0xXlylOzOT3X-25" target="Hgm0fnYg0xXlylOzOT3X-53">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="400" y="643" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Hgm0fnYg0xXlylOzOT3X-25" value="Output:&quot;thanks your table for $num_of_guest is booked at $date,$time ,Your reservation ID is 123" style="whiteSpace=wrap;html=1;rounded=0;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="348.5" y="472.25" width="103.5" height="101" as="geometry" />
+        </mxCell>
+        <mxCell id="Hgm0fnYg0xXlylOzOT3X-41" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="Hgm0fnYg0xXlylOzOT3X-42" target="Hgm0fnYg0xXlylOzOT3X-44">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="Hgm0fnYg0xXlylOzOT3X-42" value="&lt;b&gt;Intent: RegisterUser&lt;/b&gt;&lt;span style=&quot;color: rgba(0, 0, 0, 0); font-family: monospace; font-size: 0px; text-align: start; text-wrap-mode: nowrap;&quot;&gt;%3CmxGraphModel%3E%3Croot%3E%3CmxCell%20id%3D%220%22%2F%3E%3CmxCell%20id%3D%221%22%20parent%3D%220%22%2F%3E%3CmxCell%20id%3D%222%22%20style%3D%22edgeStyle%3DorthogonalEdgeStyle%3Brounded%3D0%3BorthogonalLoop%3D1%3BjettySize%3Dauto%3Bhtml%3D1%3B%22%20edge%3D%221%22%20source%3D%223%22%20target%3D%225%22%20parent%3D%221%22%3E%3CmxGeometry%20relative%3D%221%22%20as%3D%22geometry%22%2F%3E%3C%2FmxCell%3E%3CmxCell%20id%3D%223%22%20value%3D%22%26lt%3Bb%26gt%3BIntent%3A%20Welcome%26lt%3B%2Fb%26gt%3B%22%20style%3D%22rounded%3D1%3BwhiteSpace%3Dwrap%3Bhtml%3D1%3B%22%20vertex%3D%221%22%20parent%3D%221%22%3E%3CmxGeometry%20x%3D%22522%22%20y%3D%22166.25%22%20width%3D%22100%22%20height%3D%2229%22%20as%3D%22geometry%22%2F%3E%3C%2FmxCell%3E%3CmxCell%20id%3D%224%22%20value%3D%22%22%20style%3D%22edgeStyle%3DorthogonalEdgeStyle%3Brounded%3D0%3BorthogonalLoop%3D1%3BjettySize%3Dauto%3Bhtml%3D1%3B%22%20edge%3D%221%22%20source%3D%225%22%20target%3D%227%22%20parent%3D%221%22%3E%3CmxGeometry%20relative%3D%221%22%20as%3D%22geometry%22%2F%3E%3C%2FmxCell%3E%3CmxCell%20id%3D%225%22%20value%3D%22user%20input%3A%26quot%3BHello%26quot%3B%22%20style%3D%22rounded%3D0%3BwhiteSpace%3Dwrap%3Bhtml%3D1%3B%22%20vertex%3D%221%22%20parent%3D%221%22%3E%3CmxGeometry%20x%3D%22691%22%20y%3D%22165.25%22%20width%3D%22105%22%20height%3D%2231%22%20as%3D%22geometry%22%2F%3E%3C%2FmxCell%3E%3CmxCell%20id%3D%226%22%20value%3D%22%22%20style%3D%22edgeStyle%3DorthogonalEdgeStyle%3Brounded%3D0%3BorthogonalLoop%3D1%3BjettySize%3Dauto%3Bhtml%3D1%3B%22%20edge%3D%221%22%20source%3D%227%22%20target%3D%228%22%20parent%3D%221%22%3E%3CmxGeometry%20relative%3D%221%22%20as%3D%22geometry%22%2F%3E%3C%2FmxCell%3E%3CmxCell%20id%3D%227%22%20value%3D%22Entities%3A%20None%22%20style%3D%22whiteSpace%3Dwrap%3Bhtml%3D1%3Brounded%3D0%3B%22%20vertex%3D%221%22%20parent%3D%221%22%3E%3CmxGeometry%20x%3D%22859%22%20y%3D%22164%22%20width%3D%2297.5%22%20height%3D%2233.5%22%20as%3D%22geometry%22%2F%3E%3C%2FmxCell%3E%3CmxCell%20id%3D%228%22%20value%3D%22Output%3A%26quot%3BWelcome%20to%20HR.Reastaurent%20chatbot%20.How%20can%20i%20assist%20you%20today%3F%22%20style%3D%22whiteSpace%3Dwrap%3Bhtml%3D1%3Brounded%3D0%3B%22%20vertex%3D%221%22%20parent%3D%221%22%3E%3CmxGeometry%20x%3D%221032%22%20y%3D%22164.25%22%20width%3D%22215%22%20height%3D%2233.25%22%20as%3D%22geometry%22%2F%3E%3C%2FmxCell%3E%3C%2Froot%3E%3C%2FmxGraphModel%3E&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="775.75" y="-40" width="100" height="29" as="geometry" />
+        </mxCell>
+        <mxCell id="Hgm0fnYg0xXlylOzOT3X-44" value="user input:&quot;I want to register&quot;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="768.5" y="31" width="105" height="31" as="geometry" />
+        </mxCell>
+        <mxCell id="Hgm0fnYg0xXlylOzOT3X-46" value="Entities:&amp;nbsp;&lt;code data-end=&quot;2500&quot; data-start=&quot;2494&quot;&gt;Name&lt;/code&gt;, &lt;code data-end=&quot;2509&quot; data-start=&quot;2502&quot;&gt;Phone&lt;/code&gt;, &lt;code data-end=&quot;2518&quot; data-start=&quot;2511&quot;&gt;Email&lt;/code&gt;" style="whiteSpace=wrap;html=1;rounded=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="770.25" y="65" width="104.75" height="33.5" as="geometry" />
+        </mxCell>
+        <mxCell id="Hgm0fnYg0xXlylOzOT3X-74" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="Hgm0fnYg0xXlylOzOT3X-47" target="Hgm0fnYg0xXlylOzOT3X-4">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="823" y="239" />
+              <mxPoint x="401" y="239" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Hgm0fnYg0xXlylOzOT3X-75" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="Hgm0fnYg0xXlylOzOT3X-47" target="Hgm0fnYg0xXlylOzOT3X-58">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="823" y="238" />
+              <mxPoint x="626" y="238" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Hgm0fnYg0xXlylOzOT3X-76" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="Hgm0fnYg0xXlylOzOT3X-47" target="Hgm0fnYg0xXlylOzOT3X-63">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="823" y="238" />
+              <mxPoint x="854" y="238" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Hgm0fnYg0xXlylOzOT3X-114" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="Hgm0fnYg0xXlylOzOT3X-47" target="Hgm0fnYg0xXlylOzOT3X-110">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="823" y="239" />
+              <mxPoint x="1148" y="239" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Hgm0fnYg0xXlylOzOT3X-47" value="Output:&quot;Thank $name,you are successfully registered&amp;nbsp;" style="whiteSpace=wrap;html=1;rounded=0;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="768.5" y="98.5" width="109.5" height="67" as="geometry" />
+        </mxCell>
+        <mxCell id="Hgm0fnYg0xXlylOzOT3X-52" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="Hgm0fnYg0xXlylOzOT3X-53" target="Hgm0fnYg0xXlylOzOT3X-54">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="Hgm0fnYg0xXlylOzOT3X-53" value="&lt;b&gt;Intent: Cancel_&lt;/b&gt;&lt;b style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;&amp;nbsp;Reservation&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="338.75" y="648" width="123" height="29" as="geometry" />
+        </mxCell>
+        <mxCell id="Hgm0fnYg0xXlylOzOT3X-54" value="user input:&quot;I want to cancel reservation&quot;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="347.5" y="720" width="120" height="31" as="geometry" />
+        </mxCell>
+        <mxCell id="Hgm0fnYg0xXlylOzOT3X-55" value="Entities: &lt;font face=&quot;monospace&quot;&gt;id&lt;/font&gt;" style="whiteSpace=wrap;html=1;rounded=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="347" y="751" width="120.5" height="33" as="geometry" />
+        </mxCell>
+        <mxCell id="Hgm0fnYg0xXlylOzOT3X-56" value="Output:&quot;Your reservation has been successfully canceled&quot;&amp;nbsp;" style="whiteSpace=wrap;html=1;rounded=0;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="347" y="784" width="120" height="79" as="geometry" />
+        </mxCell>
+        <mxCell id="Hgm0fnYg0xXlylOzOT3X-57" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="Hgm0fnYg0xXlylOzOT3X-58" target="Hgm0fnYg0xXlylOzOT3X-59">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="Hgm0fnYg0xXlylOzOT3X-58" value="&lt;b&gt;Intent:&amp;nbsp;Show_Menu&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="565" y="326" width="123" height="29" as="geometry" />
+        </mxCell>
+        <mxCell id="Hgm0fnYg0xXlylOzOT3X-59" value="user input:&quot;Show me the menu&quot;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="567" y="412" width="120" height="31" as="geometry" />
+        </mxCell>
+        <mxCell id="Hgm0fnYg0xXlylOzOT3X-60" value="Entities: &lt;font face=&quot;monospace&quot;&gt;Not defined&amp;nbsp;&lt;/font&gt;" style="whiteSpace=wrap;html=1;rounded=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="567.5" y="443" width="119.5" height="33" as="geometry" />
+        </mxCell>
+        <mxCell id="Hgm0fnYg0xXlylOzOT3X-61" value="Output:&quot;Here is our&amp;nbsp;&lt;div&gt;menu&amp;nbsp;&lt;div&gt;pizza,burger,&lt;/div&gt;&lt;div&gt;biryani,keema,etc&lt;/div&gt;&lt;/div&gt;" style="whiteSpace=wrap;html=1;rounded=0;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="566" y="479.12" width="121" height="83" as="geometry" />
+        </mxCell>
+        <mxCell id="Hgm0fnYg0xXlylOzOT3X-62" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="Hgm0fnYg0xXlylOzOT3X-63" target="Hgm0fnYg0xXlylOzOT3X-64">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="Hgm0fnYg0xXlylOzOT3X-63" value="&lt;b&gt;Intent: Place-Order&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="795.5" y="340.19" width="123" height="29" as="geometry" />
+        </mxCell>
+        <mxCell id="Hgm0fnYg0xXlylOzOT3X-64" value="user input:&quot;I want to place an order&quot;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="796" y="422" width="120" height="31" as="geometry" />
+        </mxCell>
+        <mxCell id="Hgm0fnYg0xXlylOzOT3X-65" value="Entities: &lt;font face=&quot;monospace&quot;&gt;food_item,&lt;/font&gt;Quantity" style="whiteSpace=wrap;html=1;rounded=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="796" y="453" width="121" height="33" as="geometry" />
+        </mxCell>
+        <mxCell id="Hgm0fnYg0xXlylOzOT3X-72" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="Hgm0fnYg0xXlylOzOT3X-66" target="Hgm0fnYg0xXlylOzOT3X-79">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="858.5" y="663" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="857" y="606" />
+              <mxPoint x="724" y="606" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Hgm0fnYg0xXlylOzOT3X-88" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="Hgm0fnYg0xXlylOzOT3X-66" target="Hgm0fnYg0xXlylOzOT3X-84">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="857" y="607" />
+              <mxPoint x="1006" y="607" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Hgm0fnYg0xXlylOzOT3X-66" value="Output&quot;Order place successfully $food_item,$quantity&amp;nbsp; added to order your order id is #123" style="whiteSpace=wrap;html=1;rounded=0;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="797" y="486" width="120" height="78.75" as="geometry" />
+        </mxCell>
+        <mxCell id="Hgm0fnYg0xXlylOzOT3X-78" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="Hgm0fnYg0xXlylOzOT3X-79" target="Hgm0fnYg0xXlylOzOT3X-80">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="Hgm0fnYg0xXlylOzOT3X-79" value="&lt;b&gt;Intent:&amp;nbsp;Order status&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="663" y="669" width="123" height="29" as="geometry" />
+        </mxCell>
+        <mxCell id="Hgm0fnYg0xXlylOzOT3X-80" value="user input:&quot;Track my order&quot;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="666" y="734" width="120" height="31" as="geometry" />
+        </mxCell>
+        <mxCell id="Hgm0fnYg0xXlylOzOT3X-81" value="Entities: order_id&lt;font face=&quot;monospace&quot;&gt;,&lt;/font&gt;email" style="whiteSpace=wrap;html=1;rounded=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="666" y="768" width="121" height="33" as="geometry" />
+        </mxCell>
+        <mxCell id="Hgm0fnYg0xXlylOzOT3X-82" value="Output&quot;your order is currently pending&quot;" style="whiteSpace=wrap;html=1;rounded=0;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="667" y="801" width="120" height="46.5" as="geometry" />
+        </mxCell>
+        <mxCell id="Hgm0fnYg0xXlylOzOT3X-83" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="Hgm0fnYg0xXlylOzOT3X-84" target="Hgm0fnYg0xXlylOzOT3X-85">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="Hgm0fnYg0xXlylOzOT3X-84" value="&lt;b&gt;Intent:AddToCart&lt;/b&gt;&lt;span style=&quot;color: rgba(0, 0, 0, 0); font-family: monospace; font-size: 0px; text-align: start; text-wrap-mode: nowrap;&quot;&gt;AddToCartAddToCart%3CmxGraphModel%3E%3Croot%3E%3CmxCell%20id%3D%220%22%2F%3E%3CmxCell%20id%3D%221%22%20parent%3D%220%22%2F%3E%3CmxCell%20id%3D%222%22%20style%3D%22edgeStyle%3DorthogonalEdgeStyle%3Brounded%3D0%3BorthogonalLoop%3D1%3BjettySize%3Dauto%3Bhtml%3D1%3B%22%20edge%3D%221%22%20source%3D%223%22%20target%3D%224%22%20parent%3D%221%22%3E%3CmxGeometry%20relative%3D%221%22%20as%3D%22geometry%22%2F%3E%3C%2FmxCell%3E%3CmxCell%20id%3D%223%22%20value%3D%22%26lt%3Bb%26gt%3BIntent%3A%26amp%3Bnbsp%3BOrder%20status%26lt%3B%2Fb%26gt%3B%22%20style%3D%22rounded%3D1%3BwhiteSpace%3Dwrap%3Bhtml%3D1%3B%22%20vertex%3D%221%22%20parent%3D%221%22%3E%3CmxGeometry%20x%3D%22663%22%20y%3D%22669%22%20width%3D%22123%22%20height%3D%2229%22%20as%3D%22geometry%22%2F%3E%3C%2FmxCell%3E%3CmxCell%20id%3D%224%22%20value%3D%22user%20input%3A%26quot%3BTrack%20my%20order%26quot%3B%22%20style%3D%22rounded%3D0%3BwhiteSpace%3Dwrap%3Bhtml%3D1%3B%22%20vertex%3D%221%22%20parent%3D%221%22%3E%3CmxGeometry%20x%3D%22666%22%20y%3D%22734%22%20width%3D%22120%22%20height%3D%2231%22%20as%3D%22geometry%22%2F%3E%3C%2FmxCell%3E%3CmxCell%20id%3D%225%22%20value%3D%22Entities%3A%20order_id%26lt%3Bfont%20face%3D%26quot%3Bmonospace%26quot%3B%26gt%3B%2C%26lt%3B%2Ffont%26gt%3Bemail%22%20style%3D%22whiteSpace%3Dwrap%3Bhtml%3D1%3Brounded%3D0%3B%22%20vertex%3D%221%22%20parent%3D%221%22%3E%3CmxGeometry%20x%3D%22666%22%20y%3D%22768%22%20width%3D%22121%22%20height%3D%2233%22%20as%3D%22geometry%22%2F%3E%3C%2FmxCell%3E%3CmxCell%20id%3D%226%22%20value%3D%22Output%26quot%3Byour%20order%20is%20currently%20pending%26quot%3B%22%20style%3D%22whiteSpace%3Dwrap%3Bhtml%3D1%3Brounded%3D0%3B%22%20vertex%3D%221%22%20parent%3D%221%22%3E%3CmxGeometry%20x%3D%22667%22%20y%3D%22801%22%20width%3D%22120%22%20height%3D%2246.5%22%20as%3D%22geometry%22%2F%3E%3C%2FmxCell%3E%3C%2Froot%3E%3C%2FmxGraphModel%3E&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="944.5" y="671" width="123" height="29" as="geometry" />
+        </mxCell>
+        <mxCell id="Hgm0fnYg0xXlylOzOT3X-85" value="user input:&quot;Add 1 burger to my cart&quot;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="945" y="736" width="120" height="31" as="geometry" />
+        </mxCell>
+        <mxCell id="Hgm0fnYg0xXlylOzOT3X-86" value="Entities: &lt;font face=&quot;monospace&quot;&gt;fooditem,number&lt;/font&gt;" style="whiteSpace=wrap;html=1;rounded=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="945" y="770" width="121" height="33" as="geometry" />
+        </mxCell>
+        <mxCell id="Hgm0fnYg0xXlylOzOT3X-87" value="Output&quot;Successfully added into your cart&quot;" style="whiteSpace=wrap;html=1;rounded=0;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="946" y="803" width="120" height="46.5" as="geometry" />
+        </mxCell>
+        <mxCell id="Hgm0fnYg0xXlylOzOT3X-109" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="Hgm0fnYg0xXlylOzOT3X-110" target="Hgm0fnYg0xXlylOzOT3X-111">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="Hgm0fnYg0xXlylOzOT3X-110" value="&lt;b&gt;Intent:&amp;nbsp;Feedback&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="1086" y="364" width="123" height="29" as="geometry" />
+        </mxCell>
+        <mxCell id="Hgm0fnYg0xXlylOzOT3X-111" value="user input:&quot;I want to give feedback&quot;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="1085" y="447" width="126" height="31" as="geometry" />
+        </mxCell>
+        <mxCell id="Hgm0fnYg0xXlylOzOT3X-112" value="Entities: feedback_text&lt;font face=&quot;monospace&quot;&gt;,user_id&lt;/font&gt;" style="whiteSpace=wrap;html=1;rounded=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="1085" y="478" width="126" height="33" as="geometry" />
+        </mxCell>
+        <mxCell id="Hgm0fnYg0xXlylOzOT3X-113" value="Output:&quot;Thank you for your feedback&quot;" style="whiteSpace=wrap;html=1;rounded=0;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="1086" y="511" width="124" height="45" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
