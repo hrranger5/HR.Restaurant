@@ -85,8 +85,8 @@ pip install -r ../requirements.txt
 ### 4. **Set Up MySQL Database**
 
 - Open XAMPP and start Apache & MySQL.
-- Open `phpMyAdmin` and create a database named: `restaurantdb`
-- Import the SQL file located at: `/database/restaurant.sql`
+- Open `phpMyAdmin` and create a database named: `restaurant_chatbot`
+- Import the SQL file located at: `/database/restaurant_chatbot.sql`
 
 ### 5. **Run the Application**
 
@@ -119,7 +119,7 @@ http://localhost:5000
 |--------------------------|--------------------------------------------------|------------------            |
 | **SRS (Software Requirements Specification)** | Functional and non-functional requirements | `doc/SRS.pdf` |
 | **Design Document**      | System architecture and design details           | `doc/DesignDoc.pdf`          |
-| **FinalReport**          | FYP detaik                                       | `doc/FinalReport.pdf`        |
+| **FinalReport**          | FYP detail                                       | `doc/FinalReport.pdf`        |
 
 ---
 
