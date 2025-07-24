@@ -43,7 +43,7 @@ HR.Restaurant/
 │
 ├── src/
 │   ├── static/                # Static files (CSS, JS, etc.)
-│   ├── template/              # HTML templates (index, login, admindashboard,base,feedback,orders,signup,updatepassword,update profile,reservation ,userdashboard etc.)
+│   ├── templates/              # HTML templates (index, login, admindashboard,base,feedback,orders,signup,updatepassword,update profile,reservation ,userdashboard etc.)
 │   ├── app.py                 # Main Flask backend application
 │   ├── fetchdata.py           # Database operations and utility functions
 │
